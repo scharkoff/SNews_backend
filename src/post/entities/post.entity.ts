@@ -20,6 +20,9 @@ export class PostEntity {
   @Column()
   tags?: string;
 
+  @Column({ default: 0 })
+  views: number;
+
   @CreateDateColumn({ type: 'timestamp' })
   createdAt: Date;
 

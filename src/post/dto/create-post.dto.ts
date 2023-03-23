@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsArray } from 'class-validator';
+import { IsNotEmpty } from 'class-validator';
 
 export class CreatePostDto {
   @IsNotEmpty({ message: 'Заголовок поста не может быть пустым' })
@@ -7,6 +7,5 @@ export class CreatePostDto {
   @IsNotEmpty({ message: 'Содержимое поста не может быть пустым' })
   body: string;
 
-  @IsArray({ message: 'Тэги должны быть в формате массива' })
   tags: string;
 }
