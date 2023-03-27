@@ -15,7 +15,11 @@ export class PostService {
   ) {}
 
   create(createPostDto: CreatePostDto) {
-    return this.repository.save(createPostDto);
+    const { userId, ...postData } = createPostDto;
+    return this.repository.save({
+      user: { id: userId },
+      ...postData,
+    });
   }
 
   findAll() {

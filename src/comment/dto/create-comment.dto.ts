@@ -7,6 +7,6 @@ export class CreateCommentDto {
   @IsNotEmpty({ message: 'Идентификатор поста не может быть пустым' })
   postId: number;
 
-  @IsNotEmpty({ message: 'Идентификатор пользователя не может быть пустым' })
+  @IsNotEmpty({ message: 'Идентификатор автора не может быть пустым' })
   userId: number;
 }

@@ -9,7 +9,7 @@ export class CreateUserDto {
   @Length(6, 40, {
     message: 'Пароль должен быть минимум 6 символов',
   })
-  password_hash: string;
+  password: string;
 
   @Length(1, 30, {
     message: 'Фамилия не может быть пустой и превышать 30 символов',

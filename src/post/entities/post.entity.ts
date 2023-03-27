@@ -1,15 +1,22 @@
+import { UserEntity } from '../../user/entities/user.entity';
 import {
   Entity,
   Column,
   PrimaryGeneratedColumn,
   CreateDateColumn,
   UpdateDateColumn,
+  JoinColumn,
+  ManyToOne,
 } from 'typeorm';
 
 @Entity('posts')
 export class PostEntity {
   @PrimaryGeneratedColumn()
   id: number;
+
+  @ManyToOne(() => UserEntity, { nullable: false, onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'userId' })
+  user: UserEntity;
 
   @Column()
   title: string;
