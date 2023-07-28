@@ -1,9 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UserService } from 'src/user/user.service';
 import { UserEntity } from '../user/entities/user.entity';
 import { CreateUserDto } from 'src/user/dto/create-user.dto';
-import { checkErrorCodeAndDetail } from './handlers/CheckErrorCodeAndDetail';
+import { Repository } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
@@ -11,6 +12,8 @@ export class AuthService {
   constructor(
     private userService: UserService,
     private jwtService: JwtService,
+    @InjectRepository(UserEntity)
+    private userRepository: Repository<UserEntity>,
   ) {}
 
   async validateUser(email: string, password: string): Promise<any> {
@@ -28,6 +31,7 @@ export class AuthService {
 
   async login(user: UserEntity) {
     const { password, ...userData } = user;
+
     const payload = { email: user.email, id: user.id };
 
     return {
@@ -37,19 +41,46 @@ export class AuthService {
   }
 
   async register(user: CreateUserDto) {
-    try {
-      const saltOrRounds = 10;
+    const saltOrRounds = 10;
 
-      user.password = await bcrypt.hash(user.password, saltOrRounds);
+    user.password = await bcrypt.hash(user.password, saltOrRounds);
 
-      const { password, ...userData } = await this.userService.create(user);
+    const isLoginExists = await this.checkIfLoginExists(user.login);
+    const isEmailExists = await this.checkIfEmailExists(user.email);
 
-      return {
-        userData,
-        token: this.jwtService.sign(userData),
-      };
-    } catch (error) {
-      checkErrorCodeAndDetail(error);
+    if (isEmailExists) {
+      throw new HttpException(
+        'Пользователь с данной почтой уже существует',
+        HttpStatus.BAD_REQUEST,
+      );
     }
+
+    if (isLoginExists) {
+      throw new HttpException(
+        'Пользователь с данным логином уже существует',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    const { password, ...userData } = await this.userService.create(user);
+
+    return {
+      userData,
+      token: this.jwtService.sign(userData),
+    };
+  }
+
+  async checkIfLoginExists(login: string): Promise<boolean> {
+    const existingUser = await this.userRepository.findOneBy({
+      login,
+    });
+    return Boolean(existingUser);
+  }
+
+  async checkIfEmailExists(email: string): Promise<boolean> {
+    const existingUser = await this.userRepository.findOneBy({
+      email,
+    });
+    return Boolean(existingUser);
   }
 }

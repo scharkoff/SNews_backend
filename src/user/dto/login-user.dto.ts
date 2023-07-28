@@ -1,6 +1,4 @@
-import { IsEmail } from 'class-validator';
+import { CreateUserDto } from './create-user.dto';
+import { PartialType } from '@nestjs/mapped-types';
 
-export class LoginUserDto {
-  @IsEmail(null, { message: 'Неверный формат почты' })
-  email: string;
-}
+export class LoginUserDto extends PartialType(CreateUserDto) {}
