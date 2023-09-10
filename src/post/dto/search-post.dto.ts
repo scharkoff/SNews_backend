@@ -10,4 +10,5 @@ export class SearchPostDTO {
   tag?: string;
   limit?: number;
   take?: number;
+  page: number;
 }

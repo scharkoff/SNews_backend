@@ -48,7 +48,6 @@ export class PostService {
     const qb = this.repository.createQueryBuilder('posts');
 
     qb.limit(searchPostDTO.limit || 0);
-    qb.take(searchPostDTO.take || 10);
 
     if (searchPostDTO.views) {
       qb.orderBy('views', searchPostDTO.views);
@@ -70,6 +69,15 @@ export class PostService {
       qb.andWhere('posts.tag ILIKE :tag', {
         tag: `%${searchPostDTO.tag}%`,
       });
+    }
+
+    if (searchPostDTO.take) {
+      qb.take(searchPostDTO.take);
+    }
+
+    if (searchPostDTO.page) {
+      const skip = (searchPostDTO.page - 1) * (searchPostDTO.take || 10);
+      qb.skip(skip);
     }
 
     const [items, total] = await qb.getManyAndCount();
@@ -101,7 +109,6 @@ export class PostService {
       return post;
     } catch (error) {
       await queryRunner.rollbackTransaction();
-      handleMethodErrors(error, id);
     } finally {
       await queryRunner.release();
     }
@@ -120,9 +127,17 @@ export class PostService {
         throw new NotFoundException();
       }
 
+      await this.repository.update(id, updatePostDto);
+
+      const updatedPost = await this.repository
+        .createQueryBuilder('post')
+        .leftJoinAndSelect('post.user', 'user')
+        .where('post.id = :id', { id })
+        .getOne();
+
       await queryRunner.commitTransaction();
 
-      return this.repository.update(id, updatePostDto);
+      return updatedPost;
     } catch (error) {
       await queryRunner.rollbackTransaction();
       handleMethodErrors(error, id);
@@ -133,7 +148,6 @@ export class PostService {
 
   async remove(id: number) {
     const queryRunner = this.dataSource.createQueryRunner();
-
     await queryRunner.connect();
     await queryRunner.startTransaction();
 
@@ -144,9 +158,11 @@ export class PostService {
         throw new NotFoundException();
       }
 
+      this.repository.delete(id);
+
       await queryRunner.commitTransaction();
 
-      return this.repository.delete(id);
+      return { message: `Запись с id ${id} успешно удалена` };
     } catch (error) {
       await queryRunner.rollbackTransaction();
       handleMethodErrors(error, id);
@@ -158,7 +174,7 @@ export class PostService {
 
 function handleMethodErrors(error: any, id: number) {
   if (error.status == 404) {
-    throw new NotFoundException(`Статья с ID ${id} не найдена`);
+    throw new NotFoundException(`Запись с id ${id} не найдена`);
   } else {
     throw new InternalServerErrorException('Произошла серверная ошибка');
   }
