@@ -10,6 +10,8 @@ import { PostEntity } from './post/entities/post.entity';
 import { CommentModule } from './comment/comment.module';
 import { CommentEntity } from './comment/entities/comment.entity';
 import { AuthModule } from './auth/auth.module';
+import { SubscriptionsModule } from './subscriptions/subscriptions.module';
+import { SubscriptionEntity } from './subscriptions/entities/subscription.entity';
 
 @Module({
   imports: [
@@ -24,13 +26,14 @@ import { AuthModule } from './auth/auth.module';
       username: process.env.DATABASE_USERNAME,
       password: process.env.DATABASE_PASSWORD,
       database: process.env.DATABASE_NAME,
-      entities: [UserEntity, PostEntity, CommentEntity],
+      entities: [UserEntity, PostEntity, CommentEntity, SubscriptionEntity],
       synchronize: true,
     }),
     UserModule,
     PostModule,
     CommentModule,
     AuthModule,
+    SubscriptionsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
