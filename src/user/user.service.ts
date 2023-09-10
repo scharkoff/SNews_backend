@@ -52,7 +52,13 @@ export class UserService {
         throw new NotFoundException('Пользователь не найден');
       }
 
-      return this.repository.update(id, updateUserDto);
+      this.repository.update(id, updateUserDto);
+
+      const updatedUser = await this.repository.findOneBy({ id });
+
+      await queryRunner.commitTransaction();
+
+      return updatedUser;
     } catch (error) {
       await queryRunner.rollbackTransaction();
       handleMethodErrors(error, id);
@@ -73,7 +79,11 @@ export class UserService {
         throw new NotFoundException('Пользователь не найден');
       }
 
-      return this.repository.delete(id);
+      this.repository.delete(id);
+
+      await queryRunner.commitTransaction();
+
+      return { message: `Пользователь с id ${id} успешно удален` };
     } catch (error) {
       await queryRunner.rollbackTransaction();
       handleMethodErrors(error, id);

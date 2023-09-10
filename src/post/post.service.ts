@@ -87,7 +87,6 @@ export class PostService {
 
   async findOne(id: number) {
     const queryRunner = this.dataSource.createQueryRunner();
-
     await queryRunner.connect();
     await queryRunner.startTransaction();
 
@@ -116,7 +115,6 @@ export class PostService {
 
   async update(id: number, updatePostDto: UpdatePostDto) {
     const queryRunner = this.dataSource.createQueryRunner();
-
     await queryRunner.connect();
     await queryRunner.startTransaction();
 
