@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -27,6 +31,7 @@ export class PostService {
       order: {
         createdAt: 'DESC',
       },
+      relations: ['user'],
     });
   }
 
@@ -35,6 +40,7 @@ export class PostService {
       order: {
         views: 'DESC',
       },
+      relations: ['user'],
     });
   }
 
@@ -78,10 +84,14 @@ export class PostService {
     await queryRunner.startTransaction();
 
     try {
-      const post = await this.repository.findOneBy({ id });
+      const post = await this.repository
+        .createQueryBuilder('post')
+        .leftJoinAndSelect('post.user', 'user')
+        .where('post.id = :id', { id })
+        .getOne();
 
       if (!post) {
-        throw new Error('Статья не найдена');
+        throw new NotFoundException();
       }
 
       await this.repository.increment({ id }, 'views', 1);
@@ -91,29 +101,65 @@ export class PostService {
       return post;
     } catch (error) {
       await queryRunner.rollbackTransaction();
-      throw new NotFoundException('Статья не найдена');
+      handleMethodErrors(error, id);
     } finally {
       await queryRunner.release();
     }
   }
 
   async update(id: number, updatePostDto: UpdatePostDto) {
-    const post = await this.repository.findOneBy({ id });
+    const queryRunner = this.dataSource.createQueryRunner();
 
-    if (!post) {
-      throw new NotFoundException('Статья не найдена');
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      const post = await this.repository.findOneBy({ id });
+
+      if (!post) {
+        throw new NotFoundException();
+      }
+
+      await queryRunner.commitTransaction();
+
+      return this.repository.update(id, updatePostDto);
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      handleMethodErrors(error, id);
+    } finally {
+      await queryRunner.release();
     }
-
-    return this.repository.update(id, updatePostDto);
   }
 
   async remove(id: number) {
-    const post = await this.repository.findOneBy({ id });
+    const queryRunner = this.dataSource.createQueryRunner();
 
-    if (!post) {
-      throw new NotFoundException('Статья не найдена');
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      const post = await this.repository.findOneBy({ id });
+
+      if (!post) {
+        throw new NotFoundException();
+      }
+
+      await queryRunner.commitTransaction();
+
+      return this.repository.delete(id);
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      handleMethodErrors(error, id);
+    } finally {
+      await queryRunner.release();
     }
+  }
+}
 
-    return this.repository.delete(id);
+function handleMethodErrors(error: any, id: number) {
+  if (error.status == 404) {
+    throw new NotFoundException(`Статья с ID ${id} не найдена`);
+  } else {
+    throw new InternalServerErrorException('Произошла серверная ошибка');
   }
 }
