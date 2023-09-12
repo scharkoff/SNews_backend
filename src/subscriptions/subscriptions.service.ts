@@ -55,7 +55,7 @@ export class SubscriptionsService {
   }
 
   async findPopularUsers(skip = 0, take = 10) {
-    return await this.repository.query(
+    const result = await this.repository.query(
       `
       SELECT users.*, COUNT("followingId") as subscribers
       FROM subscriptions
@@ -66,6 +66,11 @@ export class SubscriptionsService {
     `,
       [skip, take],
     );
+
+    return result.map((user) => {
+      delete user['password'];
+      return user;
+    });
   }
 
   async remove(subscriptionId: number) {
