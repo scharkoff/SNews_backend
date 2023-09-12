@@ -19,7 +19,7 @@ export class LikesService {
     });
 
     if (existingLike) {
-      throw new HttpException('Пост уже оценен', HttpStatus.CONFLICT);
+      throw new HttpException('Запись уже оценена', HttpStatus.CONFLICT);
     }
 
     const like = await this.repository.create({
@@ -35,12 +35,13 @@ export class LikesService {
       where: { user: { id: userId }, post: { id: postId } },
     });
 
-    if (like) {
-      await this.repository.remove(like);
-      return { message: `Лайк с поста ${postId} успешно удален` };
+    if (!like) {
+      throw new HttpException('Лайк не найден', HttpStatus.NOT_FOUND);
     }
 
-    throw new HttpException('Лайк не найден', HttpStatus.NOT_FOUND);
+    await this.repository.remove(like);
+
+    return { message: `Лайк к записи ${postId} успешно удален` };
   }
 
   async findLikesByPostId(postId: number) {
