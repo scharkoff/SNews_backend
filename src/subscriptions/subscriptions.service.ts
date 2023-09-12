@@ -6,6 +6,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import { SubscriptionEntity } from './entities/subscription.entity';
+import { HttpException, HttpStatus } from '@nestjs/common';
 
 @Injectable()
 export class SubscriptionsService {
@@ -16,10 +17,25 @@ export class SubscriptionsService {
   ) {}
 
   async create(id: number, followingId: number) {
+    const existingSubscription = await this.repository.findOne({
+      where: {
+        follower: { id },
+        following: { id: followingId },
+      },
+    });
+
+    if (existingSubscription) {
+      throw new HttpException(
+        'Подписка на пользователя уже существует',
+        HttpStatus.CONFLICT,
+      );
+    }
+
     const subscription = this.repository.create({
-      follower: { id: id },
+      follower: { id },
       following: { id: followingId },
     });
+
     return await this.repository.save(subscription);
   }
 
@@ -36,6 +52,20 @@ export class SubscriptionsService {
       .leftJoinAndSelect('subscription.following', 'following')
       .where('subscription.follower = :followerId', { followerId })
       .getMany();
+  }
+
+  async findPopularUsers(skip = 0, take = 10) {
+    return await this.repository.query(
+      `
+      SELECT users.*, COUNT("followingId") as subscribers
+      FROM subscriptions
+      JOIN users ON users.id = subscriptions."followerId"
+      GROUP BY users.id, users.login
+      ORDER BY subscribers DESC
+      OFFSET $1 LIMIT $2
+    `,
+      [skip, take],
+    );
   }
 
   async remove(subscriptionId: number) {

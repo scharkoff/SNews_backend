@@ -44,6 +44,14 @@ export class PostService {
     });
   }
 
+  async findPostsByUserId(userId: number) {
+    return await this.repository
+      .createQueryBuilder('post')
+      .leftJoinAndSelect('post.user', 'user')
+      .where('post.userId = :userId', { userId })
+      .getMany();
+  }
+
   async search(searchPostDTO: SearchPostDTO) {
     const qb = this.repository.createQueryBuilder('posts');
 

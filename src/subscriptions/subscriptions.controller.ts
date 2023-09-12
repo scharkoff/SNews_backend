@@ -6,6 +6,7 @@ import {
   Param,
   UseGuards,
   Request,
+  Query,
 } from '@nestjs/common';
 import { SubscriptionsService } from './subscriptions.service';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
@@ -23,6 +24,14 @@ export class SubscriptionsController {
   @Get()
   async findAll() {
     return await this.subscriptionsService.findAll();
+  }
+
+  @Get('/popular')
+  async findPopularUsers(
+    @Query('skip') skip: number,
+    @Query('take') take: number,
+  ) {
+    return await this.subscriptionsService.findPopularUsers(skip, take);
   }
 
   @Get('/:id')

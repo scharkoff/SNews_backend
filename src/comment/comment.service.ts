@@ -38,6 +38,15 @@ export class CommentService {
       .getMany();
   }
 
+  async findAllByUserId(userId: number) {
+    return await this.repository
+      .createQueryBuilder('comment')
+      .leftJoinAndSelect('comment.user', 'user')
+      .leftJoinAndSelect('comment.post', 'post')
+      .where('comment.userId = :userId', { userId })
+      .getMany();
+  }
+
   async findOne(id: number) {
     const comment = await this.repository.findOneBy({ id });
 

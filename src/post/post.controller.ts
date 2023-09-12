@@ -32,6 +32,11 @@ export class PostController {
     return this.postService.findAllPopular();
   }
 
+  @Get('/user/:id')
+  findPostsByUserId(@Param('id') userId: string) {
+    return this.postService.findPostsByUserId(+userId);
+  }
+
   @Get('/search')
   search(@Query() searchPostDTO: SearchPostDTO) {
     return this.postService.search(searchPostDTO);
