@@ -1,13 +1,9 @@
-import {
-  Injectable,
-  InternalServerErrorException,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserEntity } from './entities/user.entity';
-import { DataSource, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { LoginUserDto } from './dto/login-user.dto';
 
 @Injectable()
@@ -15,7 +11,6 @@ export class UserService {
   constructor(
     @InjectRepository(UserEntity)
     private repository: Repository<UserEntity>,
-    private dataSource: DataSource,
   ) {}
 
   create(createUserDto: CreateUserDto) {
@@ -41,62 +36,26 @@ export class UserService {
   }
 
   async update(id: number, updateUserDto: UpdateUserDto) {
-    const queryRunner = this.dataSource.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
+    const user = await this.repository.findOneBy({ id });
 
-    try {
-      const user = await this.repository.findOneBy({ id });
-
-      if (!user) {
-        throw new NotFoundException('Пользователь не найден');
-      }
-
-      this.repository.update(id, updateUserDto);
-
-      const updatedUser = await this.repository.findOneBy({ id });
-
-      await queryRunner.commitTransaction();
-
-      return updatedUser;
-    } catch (error) {
-      await queryRunner.rollbackTransaction();
-      handleMethodErrors(error, id);
-    } finally {
-      await queryRunner.release();
+    if (!user) {
+      throw new NotFoundException('Пользователь не найден');
     }
+
+    await this.repository.update(id, updateUserDto);
+
+    return await this.repository.findOneBy({ id });
   }
 
   async remove(id: number) {
-    const queryRunner = this.dataSource.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
+    const user = await this.repository.findOneBy({ id });
 
-    try {
-      const user = await this.repository.findOneBy({ id });
-
-      if (!user) {
-        throw new NotFoundException('Пользователь не найден');
-      }
-
-      this.repository.delete(id);
-
-      await queryRunner.commitTransaction();
-
-      return { message: `Пользователь с id ${id} успешно удален` };
-    } catch (error) {
-      await queryRunner.rollbackTransaction();
-      handleMethodErrors(error, id);
-    } finally {
-      await queryRunner.release();
+    if (!user) {
+      throw new NotFoundException('Пользователь не найден');
     }
-  }
-}
 
-function handleMethodErrors(error: any, id: number) {
-  if (error.status == 404) {
-    throw new NotFoundException(`Пользователь с id ${id} не найден`);
-  } else {
-    throw new InternalServerErrorException('Произошла серверная ошибка');
+    await this.repository.delete(id);
+
+    return { message: `Пользователь с id ${id} успешно удален` };
   }
 }
