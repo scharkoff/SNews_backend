@@ -12,6 +12,8 @@ import { CommentEntity } from './comment/entities/comment.entity';
 import { AuthModule } from './auth/auth.module';
 import { SubscriptionsModule } from './subscriptions/subscriptions.module';
 import { SubscriptionEntity } from './subscriptions/entities/subscription.entity';
+import { LikeEntity } from './likes/entities/like.entity';
+import { LikesModule } from './likes/likes.module';
 
 @Module({
   imports: [
@@ -26,7 +28,13 @@ import { SubscriptionEntity } from './subscriptions/entities/subscription.entity
       username: process.env.DATABASE_USERNAME,
       password: process.env.DATABASE_PASSWORD,
       database: process.env.DATABASE_NAME,
-      entities: [UserEntity, PostEntity, CommentEntity, SubscriptionEntity],
+      entities: [
+        UserEntity,
+        PostEntity,
+        CommentEntity,
+        SubscriptionEntity,
+        LikeEntity,
+      ],
       synchronize: true,
     }),
     UserModule,
@@ -34,6 +42,7 @@ import { SubscriptionEntity } from './subscriptions/entities/subscription.entity
     CommentModule,
     AuthModule,
     SubscriptionsModule,
+    LikesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
