@@ -21,7 +21,9 @@ export class CommentService {
   }
 
   findAll() {
-    return this.repository.find();
+    return this.repository.find({
+      relations: ['post', 'user'],
+    });
   }
 
   async findAllByPostId(postId: number) {
@@ -43,7 +45,10 @@ export class CommentService {
   }
 
   async findOne(id: number) {
-    const comment = await this.repository.findOneBy({ id });
+    const comment = await this.repository.find({
+      where: { id },
+      relations: ['post', 'user'],
+    });
 
     if (!comment) {
       throw new NotFoundException('Комментарий не найден');
