@@ -25,19 +25,24 @@ export class CommentController {
     return this.commentService.findAll();
   }
 
+  @Get('/lasts/:count')
+  findLasts(@Param('count') count: string) {
+    return this.commentService.findLasts(+count || 0);
+  }
+
   @Get('/post/:id')
-  findAllByPostId(@Param('id') postId: number) {
+  findAllByPostId(@Param('id') postId: string) {
     return this.commentService.findAllByPostId(+postId);
   }
 
   @Get('/user/:id')
-  findAllByUserId(@Param('id') userId: number) {
+  findAllByUserId(@Param('id') userId: string) {
     return this.commentService.findAllByUserId(+userId);
   }
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.commentService.findOne(+id);
+    return this.commentService.findOne(+id || 0);
   }
 
   @Patch(':id')

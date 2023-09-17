@@ -26,6 +26,16 @@ export class CommentService {
     });
   }
 
+  findLasts(count: number) {
+    return this.repository.find({
+      take: count,
+      order: {
+        createdAt: 'DESC',
+      },
+      relations: ['post', 'user'],
+    });
+  }
+
   async findAllByPostId(postId: number) {
     return await this.repository
       .createQueryBuilder('comment')
